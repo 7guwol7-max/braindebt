@@ -8,7 +8,7 @@ import { PHASE_LABELS, buildReport, phaseCounts, summarize } from '../lib/aggreg
 import { SURVEY, pairById, topicById } from '../lib/content';
 import { fmtSec } from '../lib/scoring';
 import { firstSentence } from '../lib/text';
-import { appUrl, go } from '../router';
+import { appUrl, go, openNew } from '../router';
 import { buildRows, downloadCsv, downloadXlsx } from '../teacher/exports';
 import { TeacherGate } from '../teacher/TeacherGate';
 import { forgetSession, useTeacher } from '../teacher/useTeacher';
@@ -76,7 +76,7 @@ function Console({ code, token, logout }: { code: string; token: string; logout:
             <Button variant="secondary" size="sm" onClick={copy}>
               참여 링크 복사
             </Button>
-            <Button size="sm" onClick={() => window.open(appUrl(`/t/${code}/present`), '_blank')}>
+            <Button size="sm" onClick={() => openNew(`/t/${code}/present`)}>
               발표 모드 열기 ↗
             </Button>
           </div>
@@ -215,7 +215,7 @@ function Operate({
               ⏭ 늦은 학생 다음 단계로
             </Button>
           )}
-          <Button variant="secondary" onClick={() => window.open(appUrl(`/t/${code}/present`), '_blank')} disabled={snap.results.length === 0}>
+          <Button variant="secondary" onClick={() => openNew(`/t/${code}/present`)} disabled={snap.results.length === 0}>
             📊 반 결과 공개 (발표 모드)
           </Button>
           {s.stage !== 'closed' && (
@@ -544,7 +544,7 @@ function Collect({ snap, code, token, refresh }: { snap: TeacherSnapshot; code: 
           <p className="text-[13px] text-ink-3">익명 집계·겹쳐보기·소감이 담긴 읽기 전용 페이지예요. 학생 복습, 동료 교사 공유, PDF 저장에 써요.</p>
           {report ? (
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" onClick={() => window.open(appUrl(`/r/${report}`), '_blank')}>
+              <Button size="sm" onClick={() => openNew(`/r/${report}`)}>
                 리포트 열기 ↗
               </Button>
               <Button

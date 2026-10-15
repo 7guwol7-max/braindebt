@@ -9,7 +9,7 @@ import { Button, CondBadge, Modal, Spinner, cx, useToast } from '../components/u
 import { PHASE_LABELS, buildGallery, buildQuizPlan, buildReport, phaseCounts, quizStats, summarize } from '../lib/aggregate';
 import { randomId, randomInt } from '../lib/random';
 import { DISCUSSION_QUESTIONS, SHARE_STEPS, type QuizRoundPlan, type ShareState, type ShareStep, type TeacherState } from '../lib/share';
-import { appUrl, go } from '../router';
+import { appUrl, go, openNew } from '../router';
 import { TeacherGate } from '../teacher/TeacherGate';
 import { useTeacher } from '../teacher/useTeacher';
 
@@ -550,7 +550,7 @@ function Wall({ snap, code, token, refresh }: { snap: TeacherSnapshot; code: str
               <Button variant="secondary" className="flex-1" onClick={() => navigator.clipboard.writeText(appUrl(`/r/${report}`)).then(() => toast('링크를 복사했어요.'), () => {})}>
                 링크 복사
               </Button>
-              <Button className="flex-1" onClick={() => window.open(appUrl(`/r/${report}`), '_blank')}>
+              <Button className="flex-1" onClick={() => openNew(`/r/${report}`)}>
                 열기 ↗
               </Button>
             </div>
