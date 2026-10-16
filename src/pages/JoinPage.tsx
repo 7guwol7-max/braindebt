@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { api } from '../api';
 import { errorText, type SessionPublic } from '../api/types';
 import { Button, Card, Page, Spinner } from '../components/ui';
+import type { Level } from '../lib/levels';
 import { loadTabFirst, saveBoth } from '../lib/storage';
 import { go } from '../router';
 
@@ -13,6 +14,7 @@ export interface StoredCred {
   pairId: string;
   writeSeconds: number;
   mode: 'sync' | 'async';
+  level?: Level;
 }
 
 export const credKey = (code: string) => `bd:cred:${code}`;
@@ -61,6 +63,7 @@ export function JoinPage({ code: initial }: { code?: string }) {
         pairId: session.settings.pairId,
         writeSeconds: session.settings.writeSeconds,
         mode: session.settings.mode,
+        level: session.settings.level ?? 'elem',
       };
       saveBoth(credKey(code), cred);
       go(`/c/${code}`);

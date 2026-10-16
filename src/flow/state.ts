@@ -1,6 +1,7 @@
 // 10분 체험의 상태 기계. 모든 전이는 순수 함수이고, 화면은 상태를 저장(localStorage)해서 새로고침해도 이어진다.
 import { pairById, PAIRS } from '../lib/content';
 import { randomInt } from '../lib/random';
+import { levelSpec, type Level } from '../lib/levels';
 import { computeMetrics } from '../lib/scoring';
 import { SPEED } from '../lib/storage';
 import { makeCloze, normalize } from '../lib/text';
@@ -16,8 +17,6 @@ export type TestStep = 'intro' | 'predict' | 'quote' | 'cloze' | 'own';
 const TEST_STEPS: TestStep[] = ['predict', 'quote', 'cloze', 'own'];
 
 export const BREAK_SECONDS = 60;
-export const QUOTE_SECONDS = 40;
-export const CLOZE_SECONDS = 40;
 export const EXTEND_SECONDS = 30;
 
 export interface ChatMsg {
@@ -42,6 +41,7 @@ export interface Draft {
 
 export interface FlowState {
   v: 1;
+  level: Level;
   nickname: string;
   order: Order;
   pairId: string;
@@ -68,6 +68,7 @@ export interface FlowState {
 
 export interface FlowOptions {
   nickname: string;
+  level?: Level;
   pairId?: string;
   writeSeconds?: number;
   now?: number;
@@ -96,15 +97,17 @@ export function createFlow(opts: FlowOptions): FlowState {
   const now = opts.now ?? Date.now();
   const pair = opts.pairId && opts.pairId !== 'random' ? pairById(opts.pairId) : PAIRS[randomInt(PAIRS.length)];
   const flip = randomInt(2) === 1;
+  const level = opts.level ?? 'elem';
   const [topicSelf, topicAi] = flip ? [pair.topics[1], pair.topics[0]] : [pair.topics[0], pair.topics[1]];
   return {
     v: 1,
+    level,
     nickname: opts.nickname,
     order: randomInt(2) === 0 ? 'self_first' : 'ai_first',
     pairId: pair.id,
     topicSelf,
     topicAi,
-    writeSeconds: opts.writeSeconds ?? 120,
+    writeSeconds: opts.writeSeconds ?? levelSpec(level).writeSeconds,
     seed: randomInt(1 << 20),
     phase: 'intro',
     phaseStartedAt: now,
@@ -184,7 +187,7 @@ export function finishBreak(s: FlowState, now: number): FlowState {
   const tests: Partial<Record<Condition, TestRecord>> = {};
   for (const c of ['self', 'ai'] as Condition[]) {
     const w = s.writings[c];
-    const cloze = w ? makeCloze(w.text) : null;
+    const cloze = w ? makeCloze(w.text, levelSpec(s.level).clozeBlanks) : null;
     tests[c] = {
       ...emptyTest(c, topicOf(s, c)),
       skipped: !w || normalize(w.text).length < 2,
@@ -224,7 +227,8 @@ export function nextTestStep(s: FlowState, now: number): FlowState {
 }
 
 function withStep(s: FlowState, step: TestStep, now: number): FlowState {
-  const sec = step === 'quote' ? QUOTE_SECONDS : step === 'cloze' ? CLOZE_SECONDS : null;
+  const spec = levelSpec(s.level);
+  const sec = step === 'quote' ? spec.quoteSeconds : step === 'cloze' ? spec.clozeSeconds : null;
   return { ...s, testStep: step, stepStartedAt: now, deadline: sec === null ? null : now + ms(sec) };
 }
 
@@ -240,6 +244,7 @@ export function finishTest(s: FlowState, now: number): FlowState {
   const ended = enter(s, 'bill', now, null);
   const result: ResultPayload = {
     v: 1,
+    level: s.level,
     order: s.order,
     pairId: s.pairId,
     topicSelf: s.topicSelf,
@@ -253,6 +258,12 @@ export function finishTest(s: FlowState, now: number): FlowState {
     finishedAt: now,
   };
   return { ...ended, result };
+}
+
+/** 체험을 시작하기 전에만 수준을 바꿀 수 있다. 쓰기 시간도 그 수준의 기본값으로 바뀐다. */
+export function setLevel(s: FlowState, level: Level): FlowState {
+  if (s.phase !== 'intro' || s.level === level) return s;
+  return { ...s, level, writeSeconds: levelSpec(level).writeSeconds };
 }
 
 /** 교수자가 "늦은 학생 다음 단계로"를 누르면, 현재 단계를 지금까지 한 만큼으로 마치고 목표 단계까지 넘어간다. */

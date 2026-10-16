@@ -14,7 +14,7 @@ export function HomePage() {
         <div>
           <div className="text-4xl">✍️</div>
           <h1 className="mt-3 text-[30px] font-bold leading-tight">10분 글쓰기 실험</h1>
-          <p className="mt-2 text-[15px] leading-relaxed text-ink-2">짧은 글 두 편을 쓰고, 몇 가지 질문에 답해요. 약 10분 걸려요.</p>
+          <p className="mt-2 text-[15px] leading-relaxed text-ink-2">짧은 글 두 편을 쓰고, 몇 가지 질문에 답해요. 수준에 따라 10~15분 걸려요.</p>
         </div>
 
         <Card>

@@ -8,6 +8,7 @@ import { PHASE_LABELS, buildReport, phaseCounts, summarize } from '../lib/aggreg
 import { SURVEY, pairById, topicById } from '../lib/content';
 import { fmtSec } from '../lib/scoring';
 import { firstSentence } from '../lib/text';
+import { levelSpec } from '../lib/levels';
 import { appUrl, go, openNew } from '../router';
 import { buildRows, downloadCsv, downloadXlsx } from '../teacher/exports';
 import { TeacherGate } from '../teacher/TeacherGate';
@@ -62,6 +63,8 @@ function Console({ code, token, logout }: { code: string; token: string; logout:
             <h1 className="mt-1 text-2xl font-bold">{s.name || '이름 없는 수업'}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-ink-2">
               <span className="tabular rounded-lg bg-card px-2.5 py-1 text-lg font-extrabold tracking-[0.15em] text-ink">{code}</span>
+              <span>{levelSpec(s.settings.level).label}</span>
+              <span>·</span>
               <span>{s.settings.mode === 'sync' ? '교실에서 함께' : '각자 진행'}</span>
               <span>·</span>
               <span>{pairById(s.settings.pairId).label}</span>

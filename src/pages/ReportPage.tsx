@@ -6,6 +6,7 @@ import { RecallOverlay } from '../components/textviz';
 import { Button, Card, CondBadge, Page, Spinner, cx } from '../components/ui';
 import type { ReportSnapshot } from '../lib/aggregate';
 import { MIT_FACT } from '../lib/content';
+import { levelSpec } from '../lib/levels';
 import { DISCUSSION_QUESTIONS } from '../lib/share';
 
 export function ReportPage({ id }: { id: string }) {
@@ -40,7 +41,7 @@ export function ReportPage({ id }: { id: string }) {
             </div>
             <h1 className="mt-1 text-3xl font-bold">{r.name || '인지 부채 체험 수업'}</h1>
             <p className="mt-1 text-ink-2">
-              참여 {r.participants}명 · 두 글을 모두 끝낸 학생 {s.n}명
+              {levelSpec(r.level).label} 수준 · 참여 {r.participants}명 · 두 글을 모두 끝낸 사람 {s.n}명
             </p>
           </div>
           <Button variant="secondary" className="no-print" onClick={() => window.print()}>

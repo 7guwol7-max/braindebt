@@ -1,3 +1,5 @@
+import type { Level } from './levels';
+
 export type Condition = 'self' | 'ai';
 export type Order = 'self_first' | 'ai_first';
 
@@ -67,6 +69,8 @@ export interface Metrics {
 
 export interface ResultPayload {
   v: 1;
+  /** 참여자 수준 (없으면 초등) */
+  level?: Level;
   order: Order;
   pairId: string;
   topicSelf: string;

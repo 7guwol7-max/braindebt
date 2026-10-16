@@ -8,7 +8,8 @@ export type Update = (fn: (s: FlowState) => FlowState) => void;
 export function useFlow(key: string, init: () => FlowState): [FlowState, Update, () => void] {
   const [state, setState] = useState<FlowState>(() => {
     const saved = load<FlowState>(key);
-    return saved?.v === 1 ? saved : init();
+    // 수준 기능 이전에 저장된 상태는 초등으로 본다.
+    return saved?.v === 1 ? { ...saved, level: saved.level ?? 'elem' } : init();
   });
   const initRef = useRef(init);
   initRef.current = init;

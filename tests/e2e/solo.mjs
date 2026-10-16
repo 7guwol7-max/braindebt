@@ -24,6 +24,12 @@ await page.getByText('10분 글쓰기 실험').first().waitFor();
 await shot('01-home');
 await page.getByRole('button', { name: '혼자 체험하기' }).click();
 await page.getByLabel('이름 또는 닉네임 (선택)').fill('민지');
+// 수준 선택: 성인을 고르면 안내가 바뀌고, 다시 초등으로 돌아온다.
+await page.getByRole('radio', { name: /성인·교사/ }).click();
+await page.getByText('15분 글쓰기 실험').waitFor();
+await page.getByText('7문장 안팎').first().waitFor();
+await page.getByRole('radio', { name: /초등/ }).click();
+await page.getByText('10분 글쓰기 실험').waitFor();
 await shot('02-intro');
 await page.getByRole('button', { name: '시작하기' }).click();
 
@@ -34,9 +40,9 @@ const doWrite = async (n) => {
     await page.getByRole('button', { name: '찬성하는 글 써줘' }).click();
     await page.waitForFunction(() => document.querySelector('#essay')?.value.length > 60 && !document.querySelector('#essay')?.readOnly);
     await shot(`03-write${n}-ai`);
-    // 한 단어만 고친다.
+    // 끝에 짧은 문장 하나만 덧붙인다(어떤 초안이 나와도 같은 정도로 고친다).
     const v = await page.locator('#essay').inputValue();
-    await page.locator('#essay').fill(v.replace('또한', '그리고'));
+    await page.locator('#essay').fill(`${v} 내 생각도 같다.`);
   } else {
     // 붙여넣기는 막혀 있어야 한다.
     await page.locator('#essay').fill(SELF_TEXT);
@@ -100,11 +106,30 @@ console.log(JSON.stringify(result, null, 1));
 if (!(result.self.memory > 80)) throw new Error('직접 쓴 글 기억 점수가 낮다');
 if (!(result.ai.memory < 20)) throw new Error('AI 글 기억 점수가 높다');
 if (result.noDebt) throw new Error('부채가 있어야 한다');
-if (!(result.ai.editRatio > 0 && result.ai.editRatio < 10)) throw new Error('수정 비율이 이상하다');
+if (!(result.ai.editRatio > 0 && result.ai.editRatio < 25)) throw new Error(`수정 비율이 이상하다: ${result.ai.editRatio}`);
 
 // 새로고침해도 청구서가 그대로
 await page.reload();
 await page.getByText('인지 부채 청구서').waitFor();
+
+// 성인 수준: 초등 분량으로는 제출할 수 없고, AI 초안은 훨씬 길다.
+await page.getByRole('button', { name: '처음부터 다시 하기' }).click();
+await page.getByRole('radio', { name: /성인·교사/ }).click();
+await page.screenshot({ path: `${OUT}solo-10-adult-intro.png`, fullPage: true });
+await page.getByRole('button', { name: '시작하기' }).click();
+await page.locator('#essay').waitFor();
+await page.getByText('반론과 재반박').waitFor();
+if (await page.getByText('🤖 AI 도우미와 쓰기').isVisible()) {
+  await page.getByRole('button', { name: '찬성하는 글 써줘' }).click();
+  await page.waitForFunction(() => document.querySelector('#essay')?.value.length > 280 && !document.querySelector('#essay')?.readOnly);
+  const len = (await page.locator('#essay').inputValue()).length;
+  console.log('adult AI draft length', len);
+  if (!(await page.getByRole('button', { name: '제출하기' }).isEnabled())) throw new Error('성인 AI 초안으로 제출할 수 없다');
+} else {
+  await page.locator('#essay').fill(SELF_TEXT);
+  if (!(await page.getByRole('button', { name: /5문장, 220자 이상/ }).isDisabled())) throw new Error('성인 수준에서 짧은 글이 제출된다');
+}
+await page.screenshot({ path: `${OUT}solo-11-adult-write.png`, fullPage: true });
 
 if (errors.length) {
   console.error('브라우저 오류:', errors);

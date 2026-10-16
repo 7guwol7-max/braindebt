@@ -1,5 +1,6 @@
 import type { ParticipantRow, ResultRow } from '../api/types';
 import { topicById } from '../lib/content';
+import { levelSpec } from '../lib/levels';
 import { firstSentence } from '../lib/text';
 
 export interface Row {
@@ -14,7 +15,7 @@ const yesNo = (b: boolean) => (b ? '예' : '아니요');
 export function buildRows(participants: ParticipantRow[], results: ResultRow[], withTexts: boolean): (string | number)[][] {
   const byId = new Map(results.map((r) => [r.participant_id, r.payload]));
   const head = [
-    '닉네임', '상태', '공개 동의', '순서', '직접 주제', 'AI 주제',
+    '닉네임', '상태', '공개 동의', '수준', '순서', '직접 주제', 'AI 주제',
     '직접 쓰기(초)', 'AI 쓰기(초)', '직접 타자', 'AI 타자',
     '직접 예상(1-3)', 'AI 예상(1-3)', '직접 첫문장(%)', 'AI 첫문장(%)', '직접 빈칸', 'AI 빈칸',
     "직접 '내 글'", "AI '내 글'", '직접 기억점수', 'AI 기억점수', '부채(점)',
@@ -32,7 +33,7 @@ export function buildRows(participants: ParticipantRow[], results: ResultRow[], 
     }
     const m = r.metrics;
     const line: (string | number)[] = [
-      p.nickname, status, yesNo(p.consent), r.order === 'self_first' ? '직접 먼저' : 'AI 먼저',
+      p.nickname, status, yesNo(p.consent), levelSpec(r.level).label, r.order === 'self_first' ? '직접 먼저' : 'AI 먼저',
       topicById(r.topicSelf).short, topicById(r.topicAi).short,
       m.self.writeSec, m.ai.writeSec, m.self.typed, m.ai.typed,
       m.self.prediction ?? '', m.ai.prediction ?? '', m.self.quoteSim, m.ai.quoteSim,

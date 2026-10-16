@@ -1,6 +1,8 @@
 // 교수자 화면의 반 집계: 요약 통계, 겹쳐보기 갤러리, "누가 썼을까?" 퀴즈, 수업 리포트.
 import type { ParticipantRow, ReflectionRow, ResultRow, SessionRow, VoteRow } from '../api/types';
 import { topicById } from './content';
+import { draftsFor } from './drafts';
+import type { Level } from './levels';
 import { mulberry32, shuffle } from './random';
 import { PREDICTION_EXPECT } from './scoring';
 import type { GalleryItem, PublicSummary, QuizRoundPlan, SideAgg } from './share';
@@ -118,6 +120,7 @@ export function buildQuizPlan(
   planId: string,
   seed = 1,
   maxRounds = 3,
+  level: Level = 'elem',
 ): QuizRoundPlan[] {
   const rand = mulberry32(seed);
   const pools = new Map<string, { self: string[]; ai: string[] }>();
@@ -154,7 +157,8 @@ export function buildQuizPlan(
     const aiTexts = pool.ai.splice(0, 2);
     if (aiTexts.length < 2) {
       const t0 = topicById(topic);
-      const fill = shuffle([...t0.drafts.pro, ...t0.drafts.con], rand).filter((d) => !seen.has(normalize(d)));
+      const lv = draftsFor(t0, level);
+      const fill = shuffle([...lv.pro, ...lv.con], rand).filter((d) => !seen.has(normalize(d)));
       while (aiTexts.length < 2 && fill.length) {
         const d = fill.shift()!;
         seen.add(normalize(d));
@@ -221,6 +225,7 @@ export interface ReportQuiz {
 
 export interface ReportSnapshot {
   v: 1;
+  level?: Level;
   name: string;
   date: string;
   participants: number;
@@ -243,6 +248,7 @@ export function buildReport(
   const kicked = new Set(participants.filter((p) => p.kicked).map((p) => p.id));
   return {
     v: 1,
+    level: session.settings.level ?? 'elem',
     name: session.name,
     date: session.created_at,
     participants: participants.filter((p) => !p.kicked && !p.spectator).length,

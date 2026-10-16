@@ -1,30 +1,35 @@
 import { Button, Card, Eyebrow } from '../components/ui';
+import { estimatedMinutes, levelSpec, type Level } from '../lib/levels';
 import { fmtSec } from '../lib/scoring';
 
 export function IntroScreen({
   nickname,
+  level,
   writeSeconds,
   waiting,
   onStart,
 }: {
   nickname: string;
+  level: Level;
   writeSeconds: number;
   waiting?: boolean;
   onStart: () => void;
 }) {
+  const spec = levelSpec(level);
+  const testMin = Math.round((2 * (spec.quoteSeconds + spec.clozeSeconds + 20)) / 60);
   const steps = [
     ['✍️', '짧은 글 2편 쓰기', `한 편당 ${fmtSec(writeSeconds)}`],
     ['☕', '잠깐 쉬기', '1분'],
-    ['💬', '몇 가지 질문에 답하기', '약 3분'],
+    ['💬', '몇 가지 질문에 답하기', `약 ${testMin}분`],
     ['🧾', '결과 보기', ''],
   ];
   return (
     <div className="rise space-y-5">
       <div>
         <Eyebrow>{nickname ? `${nickname} 님, 반가워요` : '반가워요'}</Eyebrow>
-        <h1 className="mt-1 text-[28px] font-bold leading-tight">10분 글쓰기 실험</h1>
+        <h1 className="mt-1 text-[28px] font-bold leading-tight">{estimatedMinutes(level, writeSeconds)}분 글쓰기 실험</h1>
         <p className="mt-3 text-[15px] leading-relaxed text-ink-2">
-          두 가지 주제로 짧은 글(3문장)을 써요. 한 번은 <b className="text-ink">혼자</b>, 한 번은{' '}
+          두 가지 주제로 짧은 글({spec.sentences})을 써요. 한 번은 <b className="text-ink">혼자</b>, 한 번은{' '}
           <b className="text-ink">AI 도우미와 함께</b> 써요.
         </p>
       </div>

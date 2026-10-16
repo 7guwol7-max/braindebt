@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ClipboardEvent } from 'react';
 import { Button, Card, TimerBar, cx } from '../components/ui';
 import { topicById } from '../lib/content';
+import { levelSpec } from '../lib/levels';
 import { PREDICTION_EMOJI, PREDICTION_LABEL } from '../lib/scoring';
 import { makeCloze } from '../lib/text';
 import { currentTest, nextTestStep, remaining, updateTest, type FlowState } from '../flow/state';
@@ -121,7 +122,16 @@ export function TestScreen({ state, update, now }: { state: FlowState; update: U
         </div>
       )}
 
-      {step === 'cloze' && <ClozeStep text={state.writings[c]?.text ?? ''} answers={t.clozeAnswers} update={update} onNext={next} label={label} />}
+      {step === 'cloze' && (
+        <ClozeStep
+          text={state.writings[c]?.text ?? ''}
+          blanks={levelSpec(state.level).clozeBlanks}
+          answers={t.clozeAnswers}
+          update={update}
+          onNext={next}
+          label={label}
+        />
+      )}
 
       {step === 'own' && <OwnStep label={label} value={t.ownership} update={update} onNext={next} />}
     </div>
@@ -130,18 +140,20 @@ export function TestScreen({ state, update, now }: { state: FlowState; update: U
 
 function ClozeStep({
   text,
+  blanks,
   answers,
   update,
   onNext,
   label,
 }: {
   text: string;
+  blanks: number;
   answers: string[];
   update: Update;
   onNext: () => void;
   label: string;
 }) {
-  const cloze = useMemo(() => makeCloze(text), [text]);
+  const cloze = useMemo(() => makeCloze(text, blanks), [text, blanks]);
   if (!cloze) return null;
   const set = (i: number, v: string) =>
     update((s) => {

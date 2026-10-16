@@ -34,6 +34,7 @@ export function Experience({
       body = (
         <IntroScreen
           nickname={state.nickname}
+          level={state.level}
           writeSeconds={state.writeSeconds}
           waiting={waitingForStart}
           onStart={() => update((s) => (s.phase === 'intro' ? startWriting(s, Date.now()) : s))}

@@ -22,8 +22,9 @@ export function ClassPage({ code }: { code: string }) {
 function ClassRunner({ code, stored }: { code: string; stored: StoredCred }) {
   const cred: Cred = { code, pid: stored.pid, secret: stored.secret };
   const init = useCallback(
-    () => createFlow({ nickname: stored.nickname, pairId: stored.pairId, writeSeconds: stored.writeSeconds }),
-    [stored.nickname, stored.pairId, stored.writeSeconds],
+    () =>
+      createFlow({ nickname: stored.nickname, pairId: stored.pairId, writeSeconds: stored.writeSeconds, level: stored.level ?? 'elem' }),
+    [stored.nickname, stored.pairId, stored.writeSeconds, stored.level],
   );
   const [state, update] = useFlow(`bd:flow:${code}:${stored.pid}`, init);
   const [session, setSession] = useState<SessionPublic | null>(null);

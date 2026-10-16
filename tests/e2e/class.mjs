@@ -38,7 +38,7 @@ console.log('code', code);
 const present = await ctx.newPage();
 watch(present, 'present');
 await present.goto(`${BASE}#/t/${code}/present`);
-await present.getByText('들어온 친구 0명').waitFor();
+await present.getByText('들어온 사람 0명').waitFor();
 
 // ---------------------------------------------------------------- 학생 입장
 const mobile = async (name) => {
@@ -62,7 +62,7 @@ for (const s of students) {
   await s.page.getByText('선생님이 시작하면 바로 시작돼요').waitFor();
 }
 step('학생 3명 입장');
-await present.getByText('들어온 친구 3명').waitFor();
+await present.getByText('들어온 사람 3명').waitFor();
 await present.screenshot({ path: `${OUT}class-03-present-lobby.png` });
 await teacher.getByText('하윤').first().waitFor();
 await teacher.screenshot({ path: `${OUT}class-04-console-lobby.png`, fullPage: true });

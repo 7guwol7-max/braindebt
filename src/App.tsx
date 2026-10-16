@@ -21,7 +21,7 @@ export default function App() {
       banner = true;
       break;
     case 'solo':
-      page = <SoloPage />;
+      page = <SoloPage level={a} />;
       break;
     case 'join':
       page = <JoinPage code={a} />;

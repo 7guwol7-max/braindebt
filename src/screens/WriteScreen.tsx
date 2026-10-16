@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type FormEvent, type ReactNode } from 'react';
 import { Button, Card, TimerBar, cx, useToast } from '../components/ui';
 import { ScriptedAssistant } from '../lib/ai';
-import { STARTERS, topicById } from '../lib/content';
+import { topicById } from '../lib/content';
+import { levelSpec, meetsMinimum } from '../lib/levels';
 import { fmtSec } from '../lib/scoring';
 import { SPEED } from '../lib/storage';
 import { countSentences, normalize } from '../lib/text';
@@ -10,13 +11,9 @@ import {
 } from '../flow/state';
 import type { Update } from '../flow/useFlow';
 
-const MIN_CHARS = 40;
-const MIN_SENTENCES = 2;
 const REGEN_PROMPT = '다시 써줘';
 
-export function canSubmit(text: string): boolean {
-  return [...text.trim()].length >= MIN_CHARS && countSentences(text) >= MIN_SENTENCES;
-}
+
 
 export function WriteScreen({ state, update, now }: { state: FlowState; update: Update; now: number }) {
   const toast = useToast();
@@ -29,10 +26,11 @@ export function WriteScreen({ state, update, now }: { state: FlowState; update: 
   const paused = !!state.pausedAt;
   const isAi = c === 'ai';
   const step = phase === 'write1' ? 1 : 2;
+  const spec = levelSpec(state.level);
 
   // 대본형 도우미: 새로고침 뒤에도 같은 순서로 초안을 내도록 지금까지의 요청을 다시 재생한다.
   const assistant = useMemo(() => {
-    const a = new ScriptedAssistant(topic, state.seed + step);
+    const a = new ScriptedAssistant(topic, state.seed + step, state.level);
     for (const p of d.prompts) a.reply(p);
     return a;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -76,7 +74,7 @@ export function WriteScreen({ state, update, now }: { state: FlowState; update: 
   useEffect(() => {
     if (!timeUp) return;
     const dl = state.deadline;
-    if (!isAi && normalize(d.text).length < 20 && !d.extended) {
+    if (!isAi && normalize(d.text).length < Math.round(spec.minChars / 2) && !d.extended) {
       toast('30초 더 드릴게요. 한두 문장이라도 써 보세요.');
       update((s) => (s.phase === phase && s.deadline === dl ? extendWriting(s, Date.now()) : s));
     } else {
@@ -158,7 +156,7 @@ export function WriteScreen({ state, update, now }: { state: FlowState; update: 
   const text = streaming ? d.text.slice(0, shown ?? 0) : d.text;
   const chars = [...d.text.trim()].length;
   const sentences = countSentences(d.text);
-  const ok = canSubmit(d.text) && !streaming;
+  const ok = meetsMinimum(d.text, state.level) && !streaming;
 
   return (
     <div className="rise space-y-4">
@@ -181,7 +179,9 @@ export function WriteScreen({ state, update, now }: { state: FlowState; update: 
       <Card>
         <div className="text-[13px] font-semibold text-ink-3">주제</div>
         <h2 className="mt-1 text-xl font-bold leading-snug">{topic.question}</h2>
-        <p className="mt-2 text-sm text-ink-2">찬성이든 반대든 좋아요. 주장 1문장 + 이유 2문장으로 써 주세요.</p>
+        <p className="mt-2 text-sm text-ink-2">
+          찬성이든 반대든 좋아요. <b className="text-ink">{spec.format}</b>으로 써 주세요.
+        </p>
       </Card>
 
       {isAi && (
@@ -204,10 +204,10 @@ export function WriteScreen({ state, update, now }: { state: FlowState; update: 
             <div ref={chatEnd} />
           </div>
           <div className="flex flex-wrap gap-2">
-            <Chip onClick={() => ask('찬성하는 글 3문장 써줘', true)} disabled={thinking || streaming}>
+            <Chip onClick={() => ask(`찬성하는 글 ${spec.sentences} 써줘`, true)} disabled={thinking || streaming}>
               찬성하는 글 써줘
             </Chip>
-            <Chip onClick={() => ask('반대하는 글 3문장 써줘', true)} disabled={thinking || streaming}>
+            <Chip onClick={() => ask(`반대하는 글 ${spec.sentences} 써줘`, true)} disabled={thinking || streaming}>
               반대하는 글 써줘
             </Chip>
             {d.drafts.length > 0 && (
@@ -235,7 +235,7 @@ export function WriteScreen({ state, update, now }: { state: FlowState; update: 
         <label className="mb-2 flex items-end justify-between" htmlFor="essay">
           <span className="text-[15px] font-bold">제출할 글</span>
           <span className={cx('tabular text-sm', ok ? 'text-good' : 'text-ink-3')}>
-            {chars}자 · {sentences}문장
+            {chars}/{spec.minChars}자 · {sentences}/{spec.minSentences}문장
           </span>
         </label>
         <textarea
@@ -245,7 +245,7 @@ export function WriteScreen({ state, update, now }: { state: FlowState; update: 
           onChange={(e) => onText(e.target.value)}
           onPaste={onPaste}
           onDrop={(e) => !isAi && e.preventDefault()}
-          rows={6}
+          rows={spec.editorRows}
           placeholder={isAi ? 'AI에게 부탁하면 여기에 글이 들어와요. 직접 써도 돼요.' : '여기에 직접 써 보세요.'}
           className={cx(
             'w-full resize-none rounded-2xl border bg-card p-4 text-[16px] leading-relaxed outline-none transition focus:border-ink',
@@ -258,7 +258,7 @@ export function WriteScreen({ state, update, now }: { state: FlowState; update: 
           <details className="mt-2 text-sm text-ink-2">
             <summary className="cursor-pointer select-none text-ink-3">문장 시작 도움말</summary>
             <ul className="mt-2 list-inside list-disc space-y-1">
-              {STARTERS.map((s) => (
+              {spec.starters.map((s) => (
                 <li key={s}>{s}</li>
               ))}
             </ul>
@@ -267,7 +267,7 @@ export function WriteScreen({ state, update, now }: { state: FlowState; update: 
       </div>
 
       <Button size="lg" block disabled={!ok} onClick={() => submit(false)}>
-        {ok ? '제출하기' : `2문장, ${MIN_CHARS}자 이상 쓰면 제출할 수 있어요`}
+        {ok ? '제출하기' : `${spec.minSentences}문장, ${spec.minChars}자 이상 쓰면 제출할 수 있어요`}
       </Button>
     </div>
   );

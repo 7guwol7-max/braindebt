@@ -158,8 +158,6 @@ export function topicById(id: string): Topic {
   return TOPICS[id] ?? TOPICS.phone;
 }
 
-export const STARTERS = ['나는 ~에 찬성한다. / 나는 ~에 반대한다.', '왜냐하면 ~ 때문이다.', '또한 ~.'];
-
 export interface SurveyQuestion {
   id: string;
   text: string;

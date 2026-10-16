@@ -1,3 +1,4 @@
+import type { Level } from '../lib/levels';
 import type { ResultPayload } from '../lib/types';
 import type { ShareState, TeacherState } from '../lib/share';
 
@@ -6,6 +7,8 @@ export type Mode = 'sync' | 'async';
 
 export interface SessionSettings {
   mode: Mode;
+  /** 참여자 수준. 수준 기능 이전에 만든 수업에는 없고, 그때는 초등으로 본다. */
+  level?: Level;
   pairId: string;
   writeSeconds: number;
   retentionDays: number;

@@ -9,6 +9,7 @@ import { Button, CondBadge, Modal, Spinner, cx, useToast } from '../components/u
 import { PHASE_LABELS, buildGallery, buildQuizPlan, buildReport, phaseCounts, quizStats, summarize } from '../lib/aggregate';
 import { randomId, randomInt } from '../lib/random';
 import { DISCUSSION_QUESTIONS, SHARE_STEPS, type QuizRoundPlan, type ShareState, type ShareStep, type TeacherState } from '../lib/share';
+import { levelSpec } from '../lib/levels';
 import { appUrl, go, openNew } from '../router';
 import { TeacherGate } from '../teacher/TeacherGate';
 import { useTeacher } from '../teacher/useTeacher';
@@ -73,7 +74,10 @@ function Present({ code, token }: { code: string; token: string }) {
           ? ts.quiz
           : (() => {
               const planId = randomId(6);
-              return { planId, plan: buildQuizPlan(snap.results, snap.participants, planId, randomInt(1 << 20)) };
+              return {
+                planId,
+                plan: buildQuizPlan(snap.results, snap.participants, planId, randomInt(1 << 20), 3, snap.session.settings.level),
+              };
             })();
         if (quiz.plan.length === 0) return publish({ step: 'discuss', summary });
         return publish(quizState(quiz.plan, 0, false, summary), { ...ts, quiz });
@@ -197,7 +201,7 @@ function Present({ code, token }: { code: string; token: string }) {
                   <span>{'①②③④'[i]}</span>
                   {share.reveal && <CondBadge c={isAi ? 'ai' : 'self'} />}
                 </div>
-                <p className="text-xl leading-relaxed">{c.text}</p>
+                <p className={cx('leading-relaxed', c.text.length > 220 ? 'text-base' : c.text.length > 140 ? 'text-lg' : 'text-xl')}>{c.text}</p>
                 {share.reveal && (
                   <div className="mt-4 flex items-center gap-3">
                     <div className="h-4 flex-1 rounded-r-[4px] bg-black/5">
@@ -233,7 +237,10 @@ function Present({ code, token }: { code: string; token: string }) {
             variant="ghost"
             onClick={() => {
               const planId = randomId(6);
-              const quiz = { planId, plan: buildQuizPlan(snap.results, snap.participants, planId, randomInt(1 << 20)) };
+              const quiz = {
+                planId,
+                plan: buildQuizPlan(snap.results, snap.participants, planId, randomInt(1 << 20), 3, snap.session.settings.level),
+              };
               if (quiz.plan.length) void publish(quizState(quiz.plan, 0, false, summary), { ...ts, quiz });
             }}
           >
@@ -333,7 +340,10 @@ function Lobby({ snap, code, onStart }: { snap: TeacherSnapshot; code: string; o
         <div className="max-w-[320px] break-all text-sm text-ink-3">{url}</div>
       </div>
       <div className="space-y-6">
-        <SlideTitle eyebrow={snap.session.name || '10분 글쓰기 실험'} title={`들어온 친구 ${people.length}명`} />
+        <SlideTitle
+          eyebrow={`${snap.session.name || '글쓰기 실험'} · ${levelSpec(snap.session.settings.level).label}`}
+          title={`들어온 사람 ${people.length}명`}
+        />
         <div className="flex flex-wrap gap-2">
           {people.map((p) => (
             <span key={p.id} className="pop rounded-full bg-card px-4 py-2 text-lg font-semibold shadow-sm">
