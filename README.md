@@ -27,23 +27,27 @@ npm install
 npm run dev        # http://localhost:5173
 ```
 
-Supabase 설정이 없으면 **데모 모드**로 동작합니다. 수업 데이터가 브라우저(IndexedDB)에 저장되어,
+`npm run dev`는 **데모 모드**로 동작합니다. 수업 데이터가 브라우저(IndexedDB)에 저장되어,
 같은 브라우저의 여러 탭으로 교수자 화면과 학생 화면을 시연할 수 있습니다.
 주소 뒤에 `?speed=10`을 붙이면 모든 타이머가 10배 빨라져 리허설에 편합니다. 예: `http://localhost:5173/?speed=10#/solo`
 
 ## 실제 수업에 쓰기 (여러 기기)
 
-학생 폰과 교수자 PC가 서로 다른 기기이므로 공용 백엔드가 필요합니다. Supabase 무료 플랜으로 충분합니다.
+학생 폰과 교수자 PC가 서로 다른 기기이므로 공용 백엔드가 필요합니다. 이 저장소는 Supabase 프로젝트 `braindebt`(서울 리전)에 연결되어 있습니다.
+배포용 빌드(`npm run build`)는 `.env.production`의 공개 접속 정보를 자동으로 씁니다.
 
-1. Supabase 프로젝트를 만들고 SQL Editor에서 `supabase/migrations/20261015000000_braindebt.sql`을 실행합니다.
-   (Supabase CLI를 쓴다면 `supabase db push`)
-2. Project Settings → API에서 Project URL과 anon(public) 키를 복사해 `.env`를 만듭니다.
-   ```bash
-   cp .env.example .env
-   # VITE_SUPABASE_URL=...  VITE_SUPABASE_ANON_KEY=...
-   ```
-3. `npm run build` 후 `dist/`를 정적 호스팅(Vercel, Netlify, GitHub Pages 등)에 올립니다.
-   Vercel이라면 같은 두 환경 변수를 프로젝트에 넣고 배포하면 됩니다.
+**Vercel 배포 (처음 한 번)**
+1. https://vercel.com/new 에서 GitHub 저장소 `7guwol7-max/braindebt`를 Import 합니다.
+2. 설정은 `vercel.json`이 채워 주므로 그대로 **Deploy**를 누릅니다.
+3. 이후 이 저장소의 기본 브랜치에 푸시하면 자동으로 다시 배포됩니다.
+
+**Supabase 삭제 함수 (처음 한 번)**
+만료 데이터 정리와 "지금 삭제" 버튼이 쓰는 함수 두 개는 대시보드에서 직접 적용합니다.
+Supabase 대시보드 → SQL Editor 에 `supabase/manual/01_delete_functions.sql` 내용을 붙여 넣고 Run 하세요.
+
+**다른 Supabase 프로젝트에 새로 설치하려면**
+SQL Editor에서 `supabase/migrations/20261015000000_braindebt.sql`을 실행하고(삭제 함수 포함 전체),
+`.env.production`의 두 값을 그 프로젝트의 URL과 공개 키(Publishable key)로 바꿉니다.
 
 ### 보안 설계
 - 테이블은 RLS로 잠그고 anon 권한을 회수했습니다. 모든 읽기·쓰기는 `bd_*` RPC 함수로만 합니다.

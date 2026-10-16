@@ -140,6 +140,7 @@ export const ERROR_TEXT: Record<string, string> = {
   limit: '소감은 3개까지 보낼 수 있어요.',
   empty: '내용을 입력해 주세요.',
   kicked: '수업에서 퇴장되었어요.',
+  delete_not_ready: '삭제 기능이 아직 설정되지 않았어요. supabase/manual/01_delete_functions.sql 을 Supabase에서 한 번 실행해 주세요.',
   network: '연결이 불안정해요. 잠시 후 다시 시도해 주세요.',
 };
 
