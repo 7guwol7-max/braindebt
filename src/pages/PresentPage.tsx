@@ -10,7 +10,7 @@ import { PHASE_LABELS, buildGallery, buildQuizPlan, buildReport, phaseCounts, qu
 import { randomId, randomInt } from '../lib/random';
 import { DISCUSSION_QUESTIONS, SHARE_STEPS, type QuizRoundPlan, type ShareState, type ShareStep, type TeacherState } from '../lib/share';
 import { levelSpec } from '../lib/levels';
-import { appUrl, go, openNew } from '../router';
+import { go, openNew, shareUrl } from '../router';
 import { TeacherGate } from '../teacher/TeacherGate';
 import { useTeacher } from '../teacher/useTeacher';
 
@@ -328,7 +328,7 @@ function Empty({ text }: { text: string }) {
 }
 
 function Lobby({ snap, code, onStart }: { snap: TeacherSnapshot; code: string; onStart: () => Promise<void> }) {
-  const url = appUrl(`/join/${code}`);
+  const url = shareUrl(`/join/${code}`);
   const people = snap.participants.filter((p) => !p.kicked && !p.spectator);
   const sync = snap.session.settings.mode === 'sync';
   return (
@@ -397,7 +397,7 @@ function Progress({ snap, code, onPause }: { snap: TeacherSnapshot; code: string
         </div>
       </div>
       <div className="space-y-2 text-center">
-        <QR text={appUrl(`/join/${code}`)} size={140} className="mx-auto" />
+        <QR text={shareUrl(`/join/${code}`)} size={140} className="mx-auto" />
         <div className="tabular text-2xl font-extrabold tracking-[0.12em]">{code}</div>
       </div>
     </div>
@@ -554,10 +554,10 @@ function Wall({ snap, code, token, refresh }: { snap: TeacherSnapshot; code: str
       <Modal open={!!report} onClose={() => setReport(null)} title="수업 리포트가 준비됐어요">
         {report && (
           <div className="space-y-4 text-center">
-            <QR text={appUrl(`/r/${report}`)} size={220} className="mx-auto" />
-            <div className="break-all text-sm text-ink-3">{appUrl(`/r/${report}`)}</div>
+            <QR text={shareUrl(`/r/${report}`)} size={220} className="mx-auto" />
+            <div className="break-all text-sm text-ink-3">{shareUrl(`/r/${report}`)}</div>
             <div className="flex gap-2">
-              <Button variant="secondary" className="flex-1" onClick={() => navigator.clipboard.writeText(appUrl(`/r/${report}`)).then(() => toast('링크를 복사했어요.'), () => {})}>
+              <Button variant="secondary" className="flex-1" onClick={() => navigator.clipboard.writeText(shareUrl(`/r/${report}`)).then(() => toast('링크를 복사했어요.'), () => {})}>
                 링크 복사
               </Button>
               <Button className="flex-1" onClick={() => openNew(`/r/${report}`)}>

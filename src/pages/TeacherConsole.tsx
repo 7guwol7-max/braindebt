@@ -9,7 +9,7 @@ import { SURVEY, pairById, topicById } from '../lib/content';
 import { fmtSec } from '../lib/scoring';
 import { firstSentence } from '../lib/text';
 import { levelSpec } from '../lib/levels';
-import { appUrl, go, openNew } from '../router';
+import { go, openNew, shareUrl } from '../router';
 import { buildRows, downloadCsv, downloadXlsx } from '../teacher/exports';
 import { TeacherGate } from '../teacher/TeacherGate';
 import { forgetSession, useTeacher } from '../teacher/useTeacher';
@@ -23,7 +23,7 @@ function Console({ code, token, logout }: { code: string; token: string; logout:
   const toast = useToast();
   const [tab, setTab] = useState<'operate' | 'collect'>('operate');
   const [qr, setQr] = useState(false);
-  const joinUrl = appUrl(`/join/${code}`);
+  const joinUrl = shareUrl(`/join/${code}`);
 
   if (t.authFailed) {
     return (
@@ -235,7 +235,7 @@ function Operate({
         <Card className="py-10 text-center text-ink-2">
           <div className="text-3xl">📱</div>
           <p className="mt-2 font-semibold">학생들이 QR이나 코드 {code}로 들어오면 여기에 나타나요.</p>
-          {isDemo && <p className="mt-1 text-sm text-ink-3">데모: 새 탭에서 {appUrl(`/join/${code}`)} 를 열어 보세요.</p>}
+          {isDemo && <p className="mt-1 text-sm text-ink-3">데모: 새 탭에서 {shareUrl(`/join/${code}`)} 를 열어 보세요.</p>}
         </Card>
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
@@ -554,7 +554,7 @@ function Collect({ snap, code, token, refresh }: { snap: TeacherSnapshot; code: 
                 size="sm"
                 variant="secondary"
                 onClick={async () => {
-                  await navigator.clipboard.writeText(appUrl(`/r/${report}`)).catch(() => {});
+                  await navigator.clipboard.writeText(shareUrl(`/r/${report}`)).catch(() => {});
                   toast('리포트 링크를 복사했어요.');
                 }}
               >
