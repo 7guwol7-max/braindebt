@@ -5,3 +5,5 @@ dist
 *.log
 tests/e2e/out
 *.tsbuildinfo
+.env.production
+.env.*.local
